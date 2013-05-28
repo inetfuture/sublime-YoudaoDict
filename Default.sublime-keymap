@@ -1,0 +1,3 @@
+[
+  { "keys": ["f2"], "command": "lookup_for_selection" }
+]
