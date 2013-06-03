@@ -83,13 +83,17 @@ class RemoteEditingCommand():
         window.run_command('show_panel', {'panel': 'output.%s' % PLUGIN_NAME})
         output_view.set_read_only(False)
         edit = output_view.begin_edit()
-        output = '''%s
+        output = ''' %s [%s]
 %s
 '''
-        output = output % (self.translation['query'], self.translation['basic']['explains'][0])
+        explains = ''
+        for explain in self.translation['basic']['explains']:
+            explains += ' ' + explain + '\n'
+
+        output = output % (self.translation['query'], self.translation['basic']['phonetic'], explains)
         output_view.insert(edit, output_view.size(), output)
         output_view.end_edit(edit)
-        self.panel.show(self.panel.size())
+        output_view.show(output_view.size())
         output_view.set_read_only(True)
 
 
