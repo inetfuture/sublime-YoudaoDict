@@ -10,8 +10,6 @@ import subprocess
 import urllib2
 import simplejson as json
 
-PLUGIN_NAME = 'YoudaoDict'
-
 
 def main_thread(callback, *args, **kwargs):
     # sublime.set_timeout gets used to send things onto the main thread
@@ -71,7 +69,9 @@ class RemoteEditingCommand():
         t.start()
 
     def query_youdao(self, query):
-        query_url = 'http://fanyi.youdao.com/openapi.do?keyfrom=inetfutureblog&key=1056120967&type=data&doctype=json&version=1.1&q=' + query
+        settings = sublime.load_settings(__name__ + '.sublime-settings')
+        query_url = 'http://fanyi.youdao.com/openapi.do?keyfrom=%s&key=%s&type=data&doctype=json&version=1.1&q=' + query
+        query_url = query_url % (settings.get('keyfrom'), settings.get('key'))
         res = urllib2.urlopen(urllib2.Request(query_url))
         self.translation = json.loads(res.read())
 
@@ -79,8 +79,8 @@ class RemoteEditingCommand():
 
     def output(self):
         window = self.view.window()
-        output_view = window.get_output_panel(PLUGIN_NAME)
-        window.run_command('show_panel', {'panel': 'output.%s' % PLUGIN_NAME})
+        output_view = window.get_output_panel(__name__)
+        window.run_command('show_panel', {'panel': 'output.%s' % __name__})
         output_view.set_read_only(False)
         edit = output_view.begin_edit()
         output = ''' %s [%s]
