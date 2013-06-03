@@ -7,6 +7,7 @@ import os.path
 import functools
 import threading
 import subprocess
+import urllib
 import urllib2
 import simplejson as json
 
@@ -70,8 +71,8 @@ class RemoteEditingCommand():
 
     def query_youdao(self, query):
         settings = sublime.load_settings(__name__ + '.sublime-settings')
-        query_url = 'http://fanyi.youdao.com/openapi.do?keyfrom=%s&key=%s&type=data&doctype=json&version=1.1&q=' + query
-        query_url = query_url % (settings.get('keyfrom'), settings.get('key'))
+        query_url = 'http://fanyi.youdao.com/openapi.do?keyfrom=%s&key=%s&type=data&doctype=json&version=1.1&q='
+        query_url = query_url % (settings.get('keyfrom'), settings.get('key')) + urllib2.quote(query)
         res = urllib2.urlopen(urllib2.Request(query_url))
         self.translation = json.loads(res.read())
 
@@ -83,14 +84,20 @@ class RemoteEditingCommand():
         window.run_command('show_panel', {'panel': 'output.%s' % __name__})
         output_view.set_read_only(False)
         edit = output_view.begin_edit()
-        output = ''' %s [%s]
-%s
-'''
-        explains = ''
-        for explain in self.translation['basic']['explains']:
-            explains += ' ' + explain + '\n'
+        output = 'no translation'
+        if 'basic' in self.translation:
+            output = '%s%s\n%s'
+            phonetic = ''
+            basic = self.translation['basic']
+            if 'phonetic' in basic:
+                phonetic = ' [%s]' % basic['phonetic']
 
-        output = output % (self.translation['query'], self.translation['basic']['phonetic'], explains)
+            explains = ''
+            for explain in basic['explains']:
+                explains += ' ' + explain + '\n'
+
+            output = output % (self.translation['query'], phonetic, explains)
+
         output_view.insert(edit, output_view.size(), output)
         output_view.end_edit(edit)
         output_view.show(output_view.size())
